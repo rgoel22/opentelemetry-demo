@@ -70,7 +70,8 @@ jobs:
       - name: Rollback on Failure
         if: failure()
         run: |
-          kubectl rollout undo deployment opentelemetry-demo-frontend -n otel-demo
+          echo "Rolling back all deployments in the namespace due to failure."
+          kubectl rollout undo deployment --all -n otel-demo
 
       - name: Display Success Message
         run: echo "CI/CD pipeline executed successfully!"
