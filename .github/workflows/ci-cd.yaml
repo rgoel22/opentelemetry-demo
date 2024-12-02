@@ -71,3 +71,7 @@ jobs:
         if: failure()
         run: |
           kubectl rollout undo deployment opentelemetry-demo-frontend -n otel-demo
+
+      - name: Display Success Message
+        run: echo "CI/CD pipeline executed successfully!"
+
