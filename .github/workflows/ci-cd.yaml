@@ -41,7 +41,7 @@ jobs:
       # Step 5: Apply Namespace YAML
       - name: Apply Namespace
         run: |
-          kubectl apply -f ./opentelemetry-split/Namespaces/namespace_1.yaml
+          kubectl apply -f ./opentelemetry-split/Namespaces/namespaces_1.yaml
 
       # Step 6: Apply Other Resources Recursively
       - name: Deploy Application
