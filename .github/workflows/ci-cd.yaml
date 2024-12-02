@@ -74,4 +74,3 @@ jobs:
 
       - name: Display Success Message
         run: echo "CI/CD pipeline executed successfully!"
-
