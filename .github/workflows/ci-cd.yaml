@@ -73,7 +73,7 @@ jobs:
           echo "Rolling back all deployments in the namespace due to failure."
           for deployment in $(kubectl get deployments -n otel-demo -o jsonpath='{.items[*].metadata.name}'); do
             echo "Rolling back deployment: $deployment"
-            kubectl rollout undo deployment/$deployment -n otel-demo
+            kubectl rollout undo deployment/$deployment -n otel-demo || echo "No rollout history for deployment $deployment. Skipping."
           done
 
       - name: Display Success Message
