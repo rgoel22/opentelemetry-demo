@@ -71,7 +71,10 @@ jobs:
         if: failure()
         run: |
           echo "Rolling back all deployments in the namespace due to failure."
-          kubectl rollout undo deployment --all -n otel-demo
+          for deployment in $(kubectl get deployments -n otel-demo -o jsonpath='{.items[*].metadata.name}'); do
+            echo "Rolling back deployment: $deployment"
+            kubectl rollout undo deployment/$deployment -n otel-demo
+          done
 
       - name: Display Success Message
         run: echo "CI/CD pipeline executed successfully!"
