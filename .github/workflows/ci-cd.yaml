@@ -66,15 +66,27 @@ jobs:
         run: |
           kubectl get pods -n otel-demo
 
-      # Step 8: Rollback on Failure
+      # Step 8: Build Docker Image for Tracetest
+      - name: Build Tracetest Image
+        run: |
+          docker build --build-arg TRACETEST_IMAGE_VERSION=0.14.1 -t tracetesting-image ./test/tracetesting
+
+      # Step 9: Run Tracetest Inside Docker
+      - name: Run Tracetests
+        run: |
+          docker run --rm tracetesting-image
+
+      # Step 10: Rollback on Failure
       - name: Rollback on Failure
         if: failure()
         run: |
           echo "Rolling back all deployments in the namespace due to failure."
           for deployment in $(kubectl get deployments -n otel-demo -o jsonpath='{.items[*].metadata.name}'); do
             echo "Rolling back deployment: $deployment"
-            kubectl rollout undo deployment/$deployment -n otel-demo || echo "No rollout history for deployment $deployment. Skipping."
+            kubectl rollout undo deployment/$deployment -n otel-demo || echo "No rollback history for deployment $deployment. Skipping."
           done
 
+      # Step 11: Display Success Message
       - name: Display Success Message
+        if: success()
         run: echo "CI/CD pipeline executed successfully!"
