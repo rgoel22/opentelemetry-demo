@@ -1,3 +1,16 @@
+# Copyright 2024 ENPM818N_Group_Project4
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 name: CI/CD Pipeline
 
 on:
@@ -36,12 +49,12 @@ jobs:
       # Step 4: Update kubeconfig for EKS
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig --region us-east-1 --name otel-demo-cluster
+          aws eks update-kubeconfig --region us-east-1 --name otel-demo
 
       # Step 5: Apply Namespace YAML
       - name: Apply Namespace
         run: |
-          kubectl apply -f ./opentelemetry-split/Namespaces/namespace_1.yaml
+          kubectl apply -f ./opentelemetry-split/Namespaces/namespaces_1.yaml
 
       # Step 6: Apply Other Resources Recursively
       - name: Deploy Application
@@ -53,8 +66,34 @@ jobs:
         run: |
           kubectl get pods -n otel-demo
 
-      # Step 8: Rollback on Failure
+      # Step 8: Build Docker Image for Tracetest
+      - name: Build Tracetest Image
+        run: |
+          docker build \
+          --build-arg TRACETEST_IMAGE_VERSION=1.7.1 \
+          -t tracetesting-image \
+          -f ./test/tracetesting/Dockerfile .
+
+      # Step 9: Run Tracetest Inside Docker
+      - name: Run Tracetests
+        run: |
+          docker run --rm \
+          -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+          -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+          -e AWS_DEFAULT_REGION=us-east-1 \
+          tracetesting-image
+
+      # Step 10: Rollback on Failure
       - name: Rollback on Failure
         if: failure()
         run: |
-          kubectl rollout undo deployment opentelemetry-demo-frontend -n otel-demo
+          echo "Rolling back all deployments in the namespace due to failure."
+          for deployment in $(kubectl get deployments -n otel-demo -o jsonpath='{.items[*].metadata.name}'); do
+            echo "Rolling back deployment: $deployment"
+            kubectl rollout undo deployment/$deployment -n otel-demo || echo "No rollback history for deployment $deployment. Skipping."
+          done
+
+      # Step 11: Display Success Message
+      - name: Display Success Message
+        if: success()
+        run: echo "CI/CD pipeline executed successfully!"

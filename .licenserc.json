@@ -36,17 +36,25 @@
       "# Copyright The OpenTelemetry Authors",
       "# SPDX-License-Identifier: Apache-2.0"
     ],
-    "ignore": [
-        "node_modules/",
-        "src/accountingservice/genproto/",
-        "src/cartservice/src/obj/",
-        "src/cartservice/tests/obj/",
-        "src/checkoutservice/genproto/",
-        "src/featureflagservice/assets/vendor/",
-        "src/featureflagservice/priv/",
-        "src/productcatalogservice/genproto/",
-        "src/recommendationservice/demo_pb2.py",
-        "src/recommendationservice/demo_pb2_grpc.py",
-        "internal/tools/"
-    ]
-  }
+  "ignore": [
+    "node_modules/",
+    "src/accountingservice/genproto/",
+    "src/cartservice/src/obj/",
+    "src/cartservice/tests/obj/",
+    "src/checkoutservice/genproto/",
+    "src/featureflagservice/assets/vendor/",
+    "src/featureflagservice/priv/",
+    "src/productcatalogservice/genproto/",
+    "src/recommendationservice/demo_pb2.py",
+    "src/recommendationservice/demo_pb2_grpc.py",
+    "internal/tools/",
+    "opentelemetry-split/ConfigMaps/",
+    "opentelemetry-split/Deployments/",
+    "opentelemetry-split/Namespaces/",
+    "opentelemetry-split/Others/",
+    "opentelemetry-split/Secrets/",
+    "opentelemetry-split/Services/",
+    ".github/workflows/ci-cd.yaml"
+  ]
+
+}
