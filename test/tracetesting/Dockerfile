@@ -5,16 +5,20 @@ FROM alpine
 
 WORKDIR /app
 
+# Add required utilities
 RUN apk --update add bash jq curl
 
-COPY tracetest.tar.gz /app/
+# Copy the tar.gz file to the container
+COPY ./test/tracetesting/tracetest.tar.gz /app/
+
+# Extract the tar.gz file and move the binary to a known location
 RUN tar -xzf /app/tracetest.tar.gz \
     && mv tracetest /usr/local/bin/ \
     && chmod +x /usr/local/bin/tracetest \
-    && rm -f /app/tracetest.tar.gz
+    && rm -rf /app/tracetest.tar.gz
 
-# Copy the remaining test files
-COPY . /app/test/tracetesting
+# Copy the testing files to the container
+COPY ./test/tracetesting /app/test/tracetesting
 
 WORKDIR /app/test/tracetesting
 
