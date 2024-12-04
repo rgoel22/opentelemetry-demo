@@ -10,7 +10,7 @@ ARG TRACETEST_IMAGE_VERSION=1.7.1
 RUN apk --update add bash jq curl
 RUN curl -L https://raw.githubusercontent.com/kubeshop/tracetest/main/install-cli.sh | bash -s -- $TRACETEST_IMAGE_VERSION
 
-COPY . /app/test/tracetesting
+COPY test/tracetesting /app/test/tracetesting
 
 WORKDIR /app/test/tracetesting
 
