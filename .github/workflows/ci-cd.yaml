@@ -49,7 +49,7 @@ jobs:
       # Step 4: Update kubeconfig for EKS
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig --region us-east-1 --name otel-demo-cluster
+          aws eks update-kubeconfig --region us-east-1 --name otel-demo
 
       # Step 5: Apply Namespace YAML
       - name: Apply Namespace
