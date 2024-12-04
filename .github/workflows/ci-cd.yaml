@@ -64,7 +64,13 @@ jobs:
       # Step 9: Configure Tracetest CLI
       - name: Configure Tracetest CLI
         run: |
-          docker run --rm tracetesting-image tracetest configure --server-url http://host.docker.internal:11633
+          kubectl --namespace tracetest port-forward svc/tracetest 11633:11633 &
+          sleep 5 # Allow some time for the port-forwarding to start
+          docker run --rm \
+            -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+            -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+            -e AWS_DEFAULT_REGION=us-east-1 \
+            tracetesting-image tracetest configure --server-url http://localhost:11633
 
       # Step 10: Run Tracetest Inside Docker
       - name: Run Tracetests
