@@ -70,7 +70,7 @@ jobs:
       - name: Build Tracetest Image
         run: |
           docker build \
-          --build-arg TRACETEST_IMAGE_VERSION=0.14.1 \
+          --build-arg TRACETEST_IMAGE_VERSION=1.7.1 \
           -t tracetesting-image \
           -f ./test/tracetesting/Dockerfile .
 
