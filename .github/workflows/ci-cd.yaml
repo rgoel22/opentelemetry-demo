@@ -26,7 +26,14 @@ jobs:
           sudo mv kubectl /usr/local/bin/ || { echo "Failed to move kubectl to /usr/local/bin"; exit 1; }
           kubectl version --client || { echo "Failed to verify kubectl installation"; exit 1; }
 
-      # Step 3: Set up AWS CLI
+      # Step 3: Install Tracetest CLI
+      - name: Install Tracetest CLI
+        run: |
+          echo "Installing Tracetest CLI..."
+          curl -sL https://raw.githubusercontent.com/kubeshop/tracetest/main/install-cli.sh | bash || { echo "Failed to install Tracetest CLI"; exit 1; }
+          tracetest version || { echo "Failed to verify Tracetest installation"; exit 1; }
+
+      # Step 4: Configure AWS CLI
       - name: Configure AWS CLI
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -34,31 +41,31 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # Step 4: Update kubeconfig for EKS
+      # Step 5: Update kubeconfig for EKS
       - name: Update kubeconfig
         run: |
           echo "Configuring kubeconfig for EKS cluster..."
           aws eks update-kubeconfig --region us-east-1 --name otel-demo || { echo "Failed to configure kubeconfig"; exit 1; }
 
-      # Step 5: Apply Namespace YAML
+      # Step 6: Apply Namespace YAML
       - name: Apply Namespace
         run: |
           echo "Applying namespace configuration..."
           kubectl apply -f ./opentelemetry-split/Namespaces/namespaces_1.yaml || { echo "Failed to apply namespace"; exit 1; }
 
-      # Step 6: Apply Other Resources Recursively
+      # Step 7: Apply Other Resources Recursively
       - name: Deploy Application
         run: |
           echo "Deploying application resources..."
           kubectl apply -R -f ./opentelemetry-split/ || { echo "Failed to deploy resources"; exit 1; }
 
-      # Step 7: Verify Deployment
+      # Step 8: Verify Deployment
       - name: Verify Pods
         run: |
           echo "Verifying pod statuses..."
           kubectl get pods -n otel-demo || { echo "Failed to verify pods"; exit 1; }
 
-      # Step 8: Run Trace-Based Tests
+      # Step 9: Run Trace-Based Tests
       - name: Run Trace-Based Tests
         working-directory: test/tracetesting
         run: |
@@ -66,7 +73,7 @@ jobs:
           chmod +x run.bash || { echo "Failed to make run.bash executable"; exit 1; }
           ./run.bash || { echo "Trace-based tests failed"; exit 1; }
 
-      # Step 9: Rollback on Failure
+      # Step 10: Rollback on Failure
       - name: Rollback on Failure
         if: failure()
         run: |
@@ -76,7 +83,7 @@ jobs:
             kubectl rollout undo deployment/$deployment -n otel-demo || echo "No rollback history for deployment $deployment. Skipping."
           done
 
-      # Step 10: Display Success Message
+      # Step 11: Display Success Message
       - name: Display Success Message
         if: success()
         run: echo "CI/CD pipeline executed successfully!"
