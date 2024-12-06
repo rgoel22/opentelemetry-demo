@@ -38,7 +38,7 @@ jobs:
           TRACETEST_ENDPOINT: ${{ secrets.TRACETEST_ENDPOINT }}
         run: |
           echo "Configuring Tracetest CLI..."
-          tracetest configure --endpoint "$TRACETEST_ENDPOINT" || { echo "Failed to configure Tracetest CLI"; exit 1; }
+          tracetest configure --server-url "$TRACETEST_ENDPOINT" || { echo "Failed to configure Tracetest CLI"; exit 1; }
 
       # Step 5: Verify Tracetest CLI
       - name: Verify Tracetest CLI and Server
