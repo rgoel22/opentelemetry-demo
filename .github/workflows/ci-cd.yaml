@@ -34,9 +34,11 @@ jobs:
 
       # Step 4: Configure Tracetest CLI
       - name: Configure Tracetest CLI
+        env:
+          TRACETEST_ENDPOINT: ${{ secrets.TRACETEST_ENDPOINT }}
         run: |
           echo "Configuring Tracetest CLI..."
-          tracetest configure --endpoint "http://<your-server-endpoint>" || { echo "Failed to configure Tracetest CLI"; exit 1; }
+          tracetest configure --endpoint "$TRACETEST_ENDPOINT" || { echo "Failed to configure Tracetest CLI"; exit 1; }
 
       # Step 5: Verify Tracetest CLI
       - name: Verify Tracetest CLI and Server
@@ -63,15 +65,36 @@ jobs:
           echo "Deploying application resources..."
           kubectl apply -R -f ./opentelemetry-split/ || { echo "Failed to deploy resources"; exit 1; }
 
-      # Step 9: Run Trace-Based Tests
+      # Step 9: Verify Deployment Status
+      - name: Verify Deployment Status
+        run: |
+          echo "Checking deployed resources..."
+          kubectl get pods -n otel-demo || { echo "Failed to get pods"; exit 1; }
+          kubectl get svc -n otel-demo || { echo "Failed to get services"; exit 1; }
+
+      # Step 10: Debug Trace-Based Tests Directory
+      - name: Debug Trace-Based Tests Directory
+        working-directory: test/tracetesting
+        run: |
+          echo "Listing contents of tracetesting directory..."
+          ls -al
+
+      # Step 11: Debug run.bash Script
+      - name: Debug run.bash Script
+        working-directory: test/tracetesting
+        run: |
+          echo "Contents of run.bash:"
+          cat run.bash
+
+      # Step 12: Run Trace-Based Tests
       - name: Run Trace-Based Tests
         working-directory: test/tracetesting
         run: |
           echo "Running trace-based tests..."
           chmod +x run.bash || { echo "Failed to make run.bash executable"; exit 1; }
-          ./run.bash || { echo "Trace-based tests failed"; exit 1; }
+          bash -x run.bash || { echo "Trace-based tests failed"; exit 1; }
 
-      # Step 10: Rollback on Failure
+      # Step 13: Rollback on Failure
       - name: Rollback on Failure
         if: failure()
         run: |
@@ -81,8 +104,7 @@ jobs:
             kubectl rollout undo deployment/$deployment -n otel-demo || echo "No rollback history for deployment $deployment. Skipping."
           done
 
-      # Step 11: Display Success Message
+      # Step 14: Display Success Message
       - name: Display Success Message
         if: success()
         run: echo "CI/CD pipeline executed successfully!"
-
