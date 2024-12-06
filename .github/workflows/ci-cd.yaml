@@ -16,64 +16,40 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Install dependencies (kubectl, curl)
-      - name: Install kubectl
+      # Step 2: Install Docker
+      - name: Install Docker
         run: |
-          set -e
-          curl -LO "https://dl.k8s.io/release/v1.28.2/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
-          kubectl version --client
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
 
-      # Step 3: Install Tracetest CLI
-      - name: Install Tracetest CLI
+      # Step 3: Build and Start Services for Testing
+      - name: Start Test Services
         run: |
-          curl -sL https://raw.githubusercontent.com/kubeshop/tracetest/main/install-cli.sh | bash
+          docker compose -f ./docker-compose-tests.yml up -d --build
 
-      # Step 4: Configure Tracetest CLI
-      - name: Configure Tracetest CLI
-        run: |
-          tracetest configure --server-url "http://100.27.230.121:11633"
-
-      # Step 5: Verify Tracetest CLI
-      - name: Verify Tracetest CLI and Server
-        run: |
-          tracetest version
-
-      # Step 6: Configure AWS CLI
-      - name: Configure AWS CLI
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      # Step 7: Update kubeconfig for EKS
-      - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig --region us-east-1 --name otel-demo
-
-      # Step 8: Deploy Application
-      - name: Deploy Application
-        run: |
-            kubectl apply -f ./kubernetes/opentelemetry-demo.yaml
-
-      # Step 9: Run Trace-Based Tests
+      # Step 4: Run Trace-Based Tests
       - name: Run Trace-Based Tests
-        working-directory: test/tracetesting
+        working-directory: ./test/tracetesting
         run: |
-          chmod +x run.bash
-          ./run.bash
+          make run-tracetesting
 
-      # Step 10: Rollback on Failure
+      # Step 5: Rollback on Failure
       - name: Rollback on Failure
         if: failure()
         run: |
-          for deployment in $(kubectl get deployments -n otel-demo -o jsonpath='{.items[*].metadata.name}'); do
-            kubectl rollout undo deployment/$deployment -n otel-demo || echo "No rollback history for deployment $deployment. Skipping."
-          done
+          echo "Tests failed. Cleaning up services..."
+          docker compose -f ./docker-compose-tests.yml down || echo "Rollback failed."
 
-      # Step 11: Display Success Message
+      # Step 6: Stop Test Services After Completion
+      - name: Stop Test Services
+        if: always()
+        run: |
+          echo "Stopping services..."
+          docker compose -f ./docker-compose-tests.yml down
+
+      # Step 7: Display Success Message
       - name: Display Success Message
         if: success()
         run: echo "CI/CD pipeline executed successfully!"
