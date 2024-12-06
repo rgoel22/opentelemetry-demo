@@ -35,18 +35,27 @@ jobs:
             # Update the instance
             sudo yum update -y
           
-            # Install Docker using Amazon Linux Extras
-            sudo amazon-linux-extras enable docker
-            sudo yum install -y docker
-            sudo systemctl start docker
-            sudo systemctl enable docker
+            # Ensure Docker is installed and running
+            if ! [ -x "$(command -v docker)" ]; then
+              sudo amazon-linux-extras enable docker
+              sudo yum install -y docker
+              sudo systemctl start docker
+              sudo systemctl enable docker
+            fi
 
-            # Navigate to the application directory
+            # Navigate to the application directory or clone if not present
+            if [ ! -d "~/opentelemetry-demo" ]; then
+              git clone https://github.com/rgoel22/opentelemetry-demo.git ~/opentelemetry-demo
+            fi
             cd ~/opentelemetry-demo
 
+            # Pull latest changes
+            git reset --hard
+            git pull origin main
+
             # Deploy the new application version
-            docker compose -f docker-compose.yml build --build-arg TAG=latest
-            docker compose -f docker-compose.yml up -d
+            docker compose -f docker-compose.yml pull
+            docker compose -f docker-compose.yml up -d --build
           EOF
 
       # Step 4: Run Trace-Based Tests
@@ -79,3 +88,12 @@ jobs:
           SSH_USER: "ec2-user"
         run: |
           echo "Deployment failed. Rolling back to the previous stable version..."
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem $SSH_USER@$EC2_HOST << EOF
+            cd ~/opentelemetry-demo
+            # Bring down current deployment
+            docker compose -f docker-compose.yml down
+
+            # Restore previous stable version if available
+            git reset --hard HEAD~1
+            docker compose -f docker-compose.yml up -d --build
+          EOF
