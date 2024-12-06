@@ -23,8 +23,8 @@ jobs:
       # Step 3: Deploy Main Application to EC2
       - name: Deploy Main Application
         env:
-          EC2_HOST: "100.27.230.121" # Replace with your EC2 instance's public IP or DNS
-          SSH_USER: "ec2-user"             # Replace with the username for your EC2 instance
+          EC2_HOST: "100.27.230.121"  # Replace with your EC2 instance's public IP or DNS
+          SSH_USER: "ec2-user"        # Replace with the username for your EC2 instance
         run: |
           # Add the SSH private key from GitHub Secrets
           echo "${{ secrets.EC2_SSH_KEY }}" > ssh_key.pem
@@ -35,11 +35,9 @@ jobs:
             # Update the instance
             sudo yum update -y
           
-            # Install Docker if not already installed
-            sudo yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine containerd runc || true
-            sudo yum install -y yum-utils
-            sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-            sudo yum install -y docker-ce docker-ce-cli containerd.io
+            # Install Docker using Amazon Linux Extras
+            sudo amazon-linux-extras enable docker
+            sudo yum install -y docker
             sudo systemctl start docker
             sudo systemctl enable docker
 
@@ -81,25 +79,3 @@ jobs:
           SSH_USER: "ec2-user"
         run: |
           echo "Deployment failed. Rolling back to the previous stable version..."
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem $SSH_USER@$EC2_HOST << EOF
-            cd ~/opentelemetry-demo
-            # Pull and deploy the previous stable version
-            docker compose -f docker-compose.yml pull stable
-            docker compose -f docker-compose.yml up -d --no-build --build-arg TAG=stable
-          EOF
-
-      # Step 6: Verify Application Deployment
-      - name: Verify Application
-        env:
-          EC2_HOST: "100.27.230.121"
-          SSH_USER: "ec2-user"
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem $SSH_USER@$EC2_HOST << EOF
-            cd ~/opentelemetry-demo
-            docker ps  # Verify running containers
-          EOF
-
-      # Step 7: Cleanup SSH Key
-      - name: Cleanup
-        run: |
-          rm -f ssh_key.pem
