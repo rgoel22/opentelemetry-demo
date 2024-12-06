@@ -32,7 +32,15 @@ jobs:
           echo "Installing Tracetest CLI..."
           curl -sL https://raw.githubusercontent.com/kubeshop/tracetest/main/install-cli.sh | bash || { echo "Failed to install Tracetest CLI"; exit 1; }
 
-      # Step 4: Configure Tracetest CLI
+      # Step 4: Debug Network Connectivity
+      - name: Debug Network Connectivity
+        env:
+          TRACETEST_ENDPOINT: ${{ secrets.TRACETEST_ENDPOINT }}
+        run: |
+          echo "Testing connectivity to Tracetest endpoint..."
+          curl -v "$TRACETEST_ENDPOINT" || { echo "Failed to reach $TRACETEST_ENDPOINT"; exit 1; }
+
+      # Step 5: Configure Tracetest CLI
       - name: Configure Tracetest CLI
         env:
           TRACETEST_ENDPOINT: ${{ secrets.TRACETEST_ENDPOINT }}
@@ -40,12 +48,12 @@ jobs:
           echo "Configuring Tracetest CLI..."
           tracetest configure --server-url "$TRACETEST_ENDPOINT" || { echo "Failed to configure Tracetest CLI"; exit 1; }
 
-      # Step 5: Verify Tracetest CLI
+      # Step 6: Verify Tracetest CLI
       - name: Verify Tracetest CLI and Server
         run: |
           tracetest version || { echo "Failed to verify Tracetest CLI and server version compatibility"; exit 1; }
 
-      # Step 6: Configure AWS CLI
+      # Step 7: Configure AWS CLI
       - name: Configure AWS CLI
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -53,40 +61,40 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # Step 7: Update kubeconfig for EKS
+      # Step 8: Update kubeconfig for EKS
       - name: Update kubeconfig
         run: |
           echo "Configuring kubeconfig for EKS cluster..."
           aws eks update-kubeconfig --region us-east-1 --name otel-demo || { echo "Failed to configure kubeconfig"; exit 1; }
 
-      # Step 8: Deploy Application
+      # Step 9: Deploy Application
       - name: Deploy Application
         run: |
           echo "Deploying application resources..."
           kubectl apply -R -f ./opentelemetry-split/ || { echo "Failed to deploy resources"; exit 1; }
 
-      # Step 9: Verify Deployment Status
+      # Step 10: Verify Deployment Status
       - name: Verify Deployment Status
         run: |
           echo "Checking deployed resources..."
           kubectl get pods -n otel-demo || { echo "Failed to get pods"; exit 1; }
           kubectl get svc -n otel-demo || { echo "Failed to get services"; exit 1; }
 
-      # Step 10: Debug Trace-Based Tests Directory
+      # Step 11: Debug Trace-Based Tests Directory
       - name: Debug Trace-Based Tests Directory
         working-directory: test/tracetesting
         run: |
           echo "Listing contents of tracetesting directory..."
           ls -al
 
-      # Step 11: Debug run.bash Script
+      # Step 12: Debug run.bash Script
       - name: Debug run.bash Script
         working-directory: test/tracetesting
         run: |
           echo "Contents of run.bash:"
           cat run.bash
 
-      # Step 12: Run Trace-Based Tests
+      # Step 13: Run Trace-Based Tests
       - name: Run Trace-Based Tests
         working-directory: test/tracetesting
         run: |
@@ -94,7 +102,7 @@ jobs:
           chmod +x run.bash || { echo "Failed to make run.bash executable"; exit 1; }
           bash -x run.bash || { echo "Trace-based tests failed"; exit 1; }
 
-      # Step 13: Rollback on Failure
+      # Step 14: Rollback on Failure
       - name: Rollback on Failure
         if: failure()
         run: |
@@ -104,7 +112,7 @@ jobs:
             kubectl rollout undo deployment/$deployment -n otel-demo || echo "No rollback history for deployment $deployment. Skipping."
           done
 
-      # Step 14: Display Success Message
+      # Step 15: Display Success Message
       - name: Display Success Message
         if: success()
         run: echo "CI/CD pipeline executed successfully!"
