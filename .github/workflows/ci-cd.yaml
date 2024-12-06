@@ -33,7 +33,7 @@ jobs:
       # Step 4: Configure Tracetest CLI
       - name: Configure Tracetest CLI
         run: |
-          tracetest configure --server-url "http://54.90.203.241:11633"
+          tracetest configure --server-url "http://100.27.230.121:11633"
 
       # Step 5: Verify Tracetest CLI
       - name: Verify Tracetest CLI and Server
