@@ -2,5 +2,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
 scheme: http
-endpoint: 100.27.230.121:11633
+endpoint: tracetest-server:11633
 analyticsEnabled: false
