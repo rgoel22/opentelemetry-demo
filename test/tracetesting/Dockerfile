@@ -1,24 +1,16 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 FROM alpine
 
 WORKDIR /app
 
-# Add required utilities
+# The build-images workflow action does not set a build-arg so we need to specify a default value here
+ARG TRACETEST_IMAGE_VERSION
+
 RUN apk --update add bash jq curl
-
-# Copy the tar.gz file to the container
-COPY ./test/tracetesting/tracetest.tar.gz /app/
-
-# Extract the tar.gz file and move the binary to a known location
-RUN tar -xzf /app/tracetest.tar.gz \
-    && mv tracetest /usr/local/bin/ \
-    && chmod +x /usr/local/bin/tracetest \
-    && rm -rf /app/tracetest.tar.gz
-
-# Copy the testing files to the container
-COPY ./test/tracetesting /app/test/tracetesting
+RUN curl -L https://raw.githubusercontent.com/kubeshop/tracetest/main/install-cli.sh | bash -s -- $TRACETEST_IMAGE_VERSION
 
 WORKDIR /app/test/tracetesting
 
