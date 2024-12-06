@@ -73,7 +73,6 @@ jobs:
             docker compose -f docker-compose-tests.yml up -d
           
             # Run trace-based tests
-            cd test/tracetesting
             make run-tracetesting
           
             # Bring down the test environment after running tests
@@ -95,5 +94,5 @@ jobs:
 
             # Restore previous stable version if available
             git reset --hard HEAD~1
-            docker compose -f docker-compose.yml up -d --build
+            docker compose -f docker-compose.yml up -d
           EOF
