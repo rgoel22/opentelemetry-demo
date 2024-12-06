@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tracetest-server
+  namespace: otel-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tracetest-server
+  template:
+    metadata:
+      labels:
+        app: tracetest-server
+    spec:
+      containers:
+        - name: tracetest-server
+          image: kubeshop/tracetest:latest
+          ports:
+            - containerPort: 11633
