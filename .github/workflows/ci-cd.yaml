@@ -1,3 +1,16 @@
+# Copyright 2024 ENPM818N_Group_Project4
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 name: CI/CD Pipeline
 
 on:
@@ -16,83 +29,49 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Install SSH Client
-      - name: Install SSH Client
-        run: sudo apt-get update && sudo apt-get install -y openssh-client
-
-      # Step 3: Deploy Main Application to EC2
-      - name: Deploy Main Application
-        env:
-          EC2_HOST: "100.27.230.121"  # Replace with your EC2 instance's public IP or DNS
-          SSH_USER: "ec2-user"        # Replace with the username for your EC2 instance
+      # Step 2: Set up Kubernetes CLI (kubectl)
+      - name: Install kubectl
         run: |
-          # Add the SSH private key from GitHub Secrets
-          echo "${{ secrets.EC2_SSH_KEY }}" > ssh_key.pem
-          chmod 600 ssh_key.pem
+          sudo apt-get update
+          sudo apt-get install -y curl
+          curl -LO "https://dl.k8s.io/release/v1.27.5/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
 
-          # SSH into EC2 and deploy the main application
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem $SSH_USER@$EC2_HOST << EOF
-            # Update the instance
-            sudo yum update -y
-          
-            # Ensure Docker is installed and running
-            if ! [ -x "$(command -v docker)" ]; then
-              sudo amazon-linux-extras enable docker
-              sudo yum install -y docker
-              sudo systemctl start docker
-              sudo systemctl enable docker
-            fi
+      # Step 3: Set up AWS CLI
+      - name: Configure AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-            # Navigate to the application directory or clone if not present
-            if [ ! -d "~/opentelemetry-demo" ]; then
-              git clone https://github.com/rgoel22/opentelemetry-demo.git ~/opentelemetry-demo
-            fi
-            cd ~/opentelemetry-demo
-
-            # Pull latest changes
-            git reset --hard
-            git pull origin main
-
-            # Deploy the new application version
-            docker compose -f docker-compose.yml pull
-            docker compose -f docker-compose.yml up -d
-          EOF
-
-      # Step 4: Run Trace-Based Tests
-      - name: Run Trace-Based Tests
-        env:
-          EC2_HOST: "100.27.230.121"
-          SSH_USER: "ec2-user"
+      # Step 4: Update kubeconfig for EKS
+      - name: Update kubeconfig
         run: |
-          # SSH into EC2 and run tests
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem $SSH_USER@$EC2_HOST << EOF
-            # Navigate to the test directory
-            cd ~/opentelemetry-demo
-          
-            # Deploy the test environment using docker-compose-tests.yml
-            docker compose -f docker-compose-tests.yml up -d
-          
-            # Run trace-based tests
-            make run-tracetesting
-          
-            # Bring down the test environment after running tests
-            docker compose -f docker-compose-tests.yml down
-          EOF
+          aws eks update-kubeconfig --region us-east-1 --name otel-demo-cluster
 
-      # Step 5: Rollback on Failure
+      # Step 5: Apply Namespace YAML
+      - name: Apply Namespace
+        run: |
+          kubectl apply -f ./opentelemetry-split/Namespaces/namespaces_1.yaml
+
+      # Step 6: Apply Other Resources Recursively
+      - name: Deploy Application
+        run: |
+          kubectl apply -R -f ./opentelemetry-split/
+
+      # Step 7: Verify Deployment
+      - name: Verify Pods
+        run: |
+          kubectl get pods -n otel-demo
+
+      # Step 8: Rollback on Failure
       - name: Rollback on Failure
         if: failure()
-        env:
-          EC2_HOST: "100.27.230.121"
-          SSH_USER: "ec2-user"
         run: |
-          echo "Deployment failed. Rolling back to the previous stable version..."
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem $SSH_USER@$EC2_HOST << EOF
-            cd ~/opentelemetry-demo
-            # Bring down current deployment
-            docker compose -f docker-compose.yml down
+          echo "Rolling back all deployments in the namespace due to failure."
+          kubectl rollout undo deployment --all -n otel-demo
 
-            # Restore previous stable version if available
-            git reset --hard HEAD~1
-            docker compose -f docker-compose.yml up -d
-          EOF
+      - name: Display Success Message
+        run: echo "CI/CD pipeline executed successfully!"
