@@ -52,7 +52,7 @@ jobs:
           kubectl apply -R -f ./opentelemetry-split/Deployments/deployment_${{ matrix.step }}.yaml
 
       - name: Check deployment status
-        run: kubectl rollout status deployment/${{ matrix.step }}
+        run: kubectl rollout status deployment/opentelemetry-demo-${{ matrix.step }}
 
   kubernetes-failure-rollout:
     needs: kubernetes-deployment-apply
@@ -100,7 +100,7 @@ jobs:
         run: aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
 
       - name: Rollback deployment ${{ matrix.step }}
-        run: kubectl rollout undo deployment/${{ matrix.step }}
+        run: kubectl rollout undo deployment/opentelemetry-demo-${{ matrix.step }}
 
       - name: Check rollback status
-        run: kubectl rollout status deployment/${{ matrix.step }}
+        run: kubectl rollout status deployment/opentelemetry-demo-${{ matrix.step }}
