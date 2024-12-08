@@ -15,18 +15,23 @@ jobs:
           - checkoutservice
           - currencyservice
           - emailservice
+          - flagd
           - frauddetectionservice
           - frontend
           - frontendproxy
+          - grafana
           - imageprovider
+          - jaeger
           - kafka
           - loadgenerator
+          - open
           - paymentservice
           - productcatalogservice
+          - prometheus
           - quoteservice
           - recommendationservice
           - shippingservice
-          - flagdui
+          - valkey
 
     steps:
       - name: Checkout repository
@@ -42,13 +47,9 @@ jobs:
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
 
-      - name: Apply Namespace
-        run: |
-          kubectl apply -f ./opentelemetry-split/Namespaces/namespaces_1.yaml
-
       - name: Deploy Application
         run: |
-          kubectl apply -R -f ./opentelemetry-split/
+          kubectl apply -R -f ./opentelemetry-split/Deployments/deployment_${{ matrix.step }}.yaml
 
       - name: Check deployment status
         run: kubectl rollout status deployment/${{ matrix.step }}
@@ -66,18 +67,23 @@ jobs:
           - checkoutservice
           - currencyservice
           - emailservice
+          - flagd
           - frauddetectionservice
           - frontend
           - frontendproxy
+          - grafana
           - imageprovider
+          - jaeger
           - kafka
           - loadgenerator
+          - open
           - paymentservice
           - productcatalogservice
+          - prometheus
           - quoteservice
           - recommendationservice
           - shippingservice
-          - flagdui
+          - valkey
 
     steps:
       - name: Checkout repository
@@ -91,9 +97,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Update kubeconfig for EKS
-        run: aws eks update-kubeconfig \
-          --name otel-demo-cluster \
-          --region us-east-1
+        run: aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
 
       - name: Rollback deployment ${{ matrix.step }}
         run: kubectl rollout undo deployment/${{ matrix.step }}
