@@ -40,9 +40,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Update kubeconfig for EKS
-        run: aws eks update-kubeconfig \
-          --name otel-demo-cluster \
-          --region us-east-1
+        run: aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
 
       - name: Apply Namespace
         run: |
