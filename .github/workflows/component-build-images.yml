@@ -2,6 +2,15 @@ name: Build and Push to ECR
 
 on:
   workflow_call:
+    inputs:
+      push:
+        description: Should the images be pushed to the container registry
+        required: true
+        type: boolean
+      version:
+        description: Version tag for the Docker images
+        required: true
+        type: string
 
 env:
   AWS_REGION: us-east-1
@@ -71,11 +80,11 @@ jobs:
           context: ${{ matrix.services.context }}
           file: ${{ matrix.services.file }}
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: ${{ inputs.push }}
           build-args: |
             OTEL_JAVA_AGENT_VERSION=${{ env.OTEL_JAVA_AGENT_VERSION }}
             OPENTELEMETRY_CPP_VERSION=${{ env.OPENTELEMETRY_CPP_VERSION }}
             TRACETEST_IMAGE_VERSION=${{ env.TRACETEST_IMAGE_VERSION }}
           tags: |
-            ${{ env.ECR_REPO_URI }}:${{ github.sha }}-${{ matrix.services.tag_suffix }}
+            ${{ env.ECR_REPO_URI }}:${{ inputs.version }}-${{ matrix.services.tag_suffix }}
             ${{ env.ECR_REPO_URI }}:latest-${{ matrix.services.tag_suffix }}
