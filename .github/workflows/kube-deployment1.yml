@@ -7,6 +7,14 @@ jobs:
   update-kubeconfig-and-namespace:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Confirm Path exist
+        run: |
+          echo "Workspace files:"
+          ls -R ./opentelemetry-split/
+
       - name: Update kubeconfig for EKS
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -14,13 +22,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig --region us-east-1 --name otel-demo-cluster
-
       - name: Apply Namespace
         run: |
-          kubectl apply -f ./opentelemetry-split/Namespaces/namespaces_1.yaml
+          kubectl apply -f $GITHUB_WORKSPACE/opentelemetry-split/Namespaces/namespaces_1.yaml
 
   kubernetes-deployment-apply:
     runs-on: ubuntu-latest
