@@ -33,6 +33,6 @@ jobs:
     needs: build_images
     secrets: inherit
   kubenetes_deployment:
-    uses: ./.github/workflows/kube-deployment.yml
+    uses: ./.github/workflows/kube-deployment1.yml
     needs: integration_checks
     secrets: inherit
