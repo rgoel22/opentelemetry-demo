@@ -14,26 +14,26 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/component: recommendationservice
+    app.kubernetes.io/component: currencyservice
     app.kubernetes.io/instance: opentelemetry-demo
-    app.kubernetes.io/name: opentelemetry-demo-recommendationservice
+    app.kubernetes.io/name: opentelemetry-demo-currencyservice
     app.kubernetes.io/part-of: opentelemetry-demo
     app.kubernetes.io/version: 1.12.0
-    opentelemetry.io/name: opentelemetry-demo-recommendationservice
-  name: opentelemetry-demo-recommendationservice
+    opentelemetry.io/name: opentelemetry-demo-currencyservice
+  name: opentelemetry-demo-currencyservice
 spec:
   replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      opentelemetry.io/name: opentelemetry-demo-recommendationservice
+      opentelemetry.io/name: opentelemetry-demo-currencyservice
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: recommendationservice
+        app.kubernetes.io/component: currencyservice
         app.kubernetes.io/instance: opentelemetry-demo
-        app.kubernetes.io/name: opentelemetry-demo-recommendationservice
-        opentelemetry.io/name: opentelemetry-demo-recommendationservice
+        app.kubernetes.io/name: opentelemetry-demo-currencyservice
+        opentelemetry.io/name: opentelemetry-demo-currencyservice
     spec:
       containers:
       - env:
@@ -46,31 +46,23 @@ spec:
           value: opentelemetry-demo-otelcol
         - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
           value: cumulative
-        - name: RECOMMENDATION_SERVICE_PORT
+        - name: CURRENCY_SERVICE_PORT
           value: '8080'
-        - name: PRODUCT_CATALOG_SERVICE_ADDR
-          value: opentelemetry-demo-productcatalogservice:8080
-        - name: OTEL_PYTHON_LOG_CORRELATION
-          value: 'true'
-        - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
-          value: python
-        - name: FLAGD_HOST
-          value: opentelemetry-demo-flagd
-        - name: FLAGD_PORT
-          value: '8013'
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
           value: http://$(OTEL_COLLECTOR_NAME):4317
+        - name: VERSION
+          value: 1.12.0
         - name: OTEL_RESOURCE_ATTRIBUTES
           value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version=1.12.0
-        image: ghcr.io/open-telemetry/demo:1.12.0-recommendationservice
+        image: 314147830127.dkr.ecr.us-east-1.amazonaws.com/otel-demo:latest-currencyservice
         imagePullPolicy: IfNotPresent
-        name: recommendationservice
+        name: currencyservice
         ports:
         - containerPort: 8080
           name: service
         resources:
           limits:
-            memory: 500Mi
+            memory: 20Mi
         volumeMounts: null
       serviceAccountName: opentelemetry-demo
       volumes: null

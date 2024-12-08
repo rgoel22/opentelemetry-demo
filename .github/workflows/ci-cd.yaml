@@ -22,56 +22,17 @@ on:
       - main
 
 jobs:
-  build-test-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      # Step 1: Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # Step 2: Set up Kubernetes CLI (kubectl)
-      - name: Install kubectl
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl
-          curl -LO "https://dl.k8s.io/release/v1.27.5/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
-
-      # Step 3: Set up AWS CLI
-      - name: Configure AWS CLI
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      # Step 4: Update kubeconfig for EKS
-      - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig --region us-east-1 --name otel-demo
-
-      # Step 5: Apply Namespace YAML
-      - name: Apply Namespace
-        run: |
-          kubectl apply -f ./opentelemetry-split/Namespaces/namespaces_1.yaml
-
-      # Step 6: Apply Other Resources Recursively
-      - name: Deploy Application
-        run: |
-          kubectl apply -R -f ./opentelemetry-split/
-
-      # Step 7: Verify Deployment
-      - name: Verify Pods
-        run: |
-          kubectl get pods -n otel-demo
-
-      # Step 8: Rollback on Failure
-      - name: Rollback on Failure
-        if: failure()
-        run: |
-          echo "Rolling back all deployments in the namespace due to failure."
-          kubectl rollout undo deployment --all -n otel-demo
-
-      - name: Display Success Message
-        run: echo "CI/CD pipeline executed successfully!"
+  build_images:
+    uses: ./.github/workflows/component-build-images.yml
+    secrets: inherit
+    with:
+      push: true
+      version: 'main'
+  integration_checks:
+    uses: ./.github/workflows/checks.yml
+    needs: build_images
+    secrets: inherit
+  kubenetes_deployment:
+    uses: ./.github/workflows/kube-deployment.yml
+    needs: integration_checks
+    secrets: inherit

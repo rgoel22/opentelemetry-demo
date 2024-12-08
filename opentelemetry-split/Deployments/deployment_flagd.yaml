@@ -85,7 +85,7 @@ spec:
           value: http://$(OTEL_COLLECTOR_NAME):4317
         - name: OTEL_RESOURCE_ATTRIBUTES
           value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version=1.12.0
-        image: ghcr.io/open-telemetry/demo:1.12.0-flagdui
+        image: 314147830127.dkr.ecr.us-east-1.amazonaws.com/otel-demo:latest-flagdui
         imagePullPolicy: IfNotPresent
         name: flagdui
         ports:
