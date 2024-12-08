@@ -1,4 +1,4 @@
-name: kubernetes deployment
+name: kube deployment
 
 on:
   workflow_call:
