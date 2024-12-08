@@ -51,8 +51,6 @@ jobs:
         run: |
           kubectl apply -R -f ./opentelemetry-split/Deployments/deployment_${{ matrix.step }}.yaml
 
-      - name: Check deployment status
-        run: kubectl rollout status deployment/opentelemetry-demo-${{ matrix.step }}
 
   kubernetes-failure-rollout:
     needs: kubernetes-deployment-apply
@@ -102,5 +100,3 @@ jobs:
       - name: Rollback deployment ${{ matrix.step }}
         run: kubectl rollout undo deployment/opentelemetry-demo-${{ matrix.step }}
 
-      - name: Check rollback status
-        run: kubectl rollout status deployment/opentelemetry-demo-${{ matrix.step }}
