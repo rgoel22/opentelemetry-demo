@@ -8,7 +8,25 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        step: [accountingservice, adservice, cartservice, checkoutservice, currencyservice, emailservice, frauddetectionservice, frontend, frontendproxy, imageprovider, kafka, loadgenerator, paymentservice, productcatalogservice, quoteservice, recommendationservice, shippingservice, flagdui]
+        step:
+          - accountingservice
+          - adservice
+          - cartservice
+          - checkoutservice
+          - currencyservice
+          - emailservice
+          - frauddetectionservice
+          - frontend
+          - frontendproxy
+          - imageprovider
+          - kafka
+          - loadgenerator
+          - paymentservice
+          - productcatalogservice
+          - quoteservice
+          - recommendationservice
+          - shippingservice
+          - flagdui
 
     steps:
       - name: Checkout repository
@@ -22,11 +40,14 @@ jobs:
           aws-region: us-east-1
 
       - name: Update kubeconfig for EKS
-        run: aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
+        run: aws eks update-kubeconfig \
+          --name otel-demo-cluster \
+          --region us-east-1
 
       - name: Apply deployment ${{ matrix.step }}
         run: |
-          kubectl apply -f ./split_yaml/Deployment/opentelemetry-demo-${{ matrix.step }}.yaml
+          kubectl apply -f \
+          ./split_yaml/Deployment/opentelemetry-demo-${{ matrix.step }}.yaml
 
       - name: Check deployment status
         run: kubectl rollout status deployment/${{ matrix.step }}
@@ -37,7 +58,25 @@ jobs:
     if: failure()
     strategy:
       matrix:
-        step: [accountingservice, adservice, cartservice, checkoutservice, currencyservice, emailservice, frauddetectionservice, frontend, frontendproxy, imageprovider, kafka, loadgenerator, paymentservice, productcatalogservice, quoteservice, recommendationservice, shippingservice, flagdui]
+        step:
+          - accountingservice
+          - adservice
+          - cartservice
+          - checkoutservice
+          - currencyservice
+          - emailservice
+          - frauddetectionservice
+          - frontend
+          - frontendproxy
+          - imageprovider
+          - kafka
+          - loadgenerator
+          - paymentservice
+          - productcatalogservice
+          - quoteservice
+          - recommendationservice
+          - shippingservice
+          - flagdui
 
     steps:
       - name: Checkout repository
@@ -51,7 +90,9 @@ jobs:
           aws-region: us-east-1
 
       - name: Update kubeconfig for EKS
-        run: aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
+        run: aws eks update-kubeconfig \
+          --name otel-demo-cluster \
+          --region us-east-1
 
       - name: Rollback deployment ${{ matrix.step }}
         run: kubectl rollout undo deployment/${{ matrix.step }}

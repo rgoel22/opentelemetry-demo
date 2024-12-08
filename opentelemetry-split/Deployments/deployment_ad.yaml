@@ -70,5 +70,3 @@ spec:
         volumeMounts: null
       serviceAccountName: opentelemetry-demo
       volumes: null
-
-
