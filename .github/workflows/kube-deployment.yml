@@ -98,4 +98,14 @@ jobs:
         run: aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
 
       - name: Rollback deployment ${{ matrix.step }}
-        run: kubectl rollout undo deployment/opentelemetry-demo-${{ matrix.step }}
+        run: |
+          if kubectl rollout history deployment/opentelemetry-demo-${{ matrix.step }} > /dev/null 2>&1; then
+            echo "Rolling back ${{ matrix.step }}..."
+            kubectl rollout undo deployment/opentelemetry-demo-${{ matrix.step }}
+            kubectl rollout status deployment/opentelemetry-demo-${{ matrix.step }} --timeout=60s
+          else
+            echo "No previous deployment to rollback to for ${{ matrix.step }}."
+          fi
+
+      - name: Log rollback success
+        run: echo "Rollback completed for ${{ matrix.step }}."
