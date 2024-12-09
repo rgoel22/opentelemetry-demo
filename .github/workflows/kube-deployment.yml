@@ -99,4 +99,3 @@ jobs:
 
       - name: Rollback deployment ${{ matrix.step }}
         run: kubectl rollout undo deployment/opentelemetry-demo-${{ matrix.step }}
-
