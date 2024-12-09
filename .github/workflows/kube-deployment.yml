@@ -50,11 +50,14 @@ jobs:
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
 
-      - name: Rollback deployment
+      - name: Rollback deployments
         run: |
-          echo "Rolling back deployments from combined file..."
-          kubectl rollout undo -f ./kubernetes/opentelemetry-demo.yaml
-          kubectl rollout status -f ./kubernetes/opentelemetry-demo.yaml --timeout=60s
+          echo "Rolling back deployments in namespace otel-demo..."
+          kubectl get deployments -n otel-demo -o jsonpath="{.items[*].metadata.name}" | tr ' ' '\n' | while read deployment; do
+            echo "Rolling back $deployment..."
+            kubectl rollout undo deployment/$deployment -n otel-demo || echo "No rollback available for $deployment."
+            kubectl rollout status deployment/$deployment -n otel-demo --timeout=60s
+          done
 
       - name: Log rollback success
-        run: echo "Rollback completed for all deployments in the combined file."
+        run: echo "Rollback completed for all deployments in the namespace."
