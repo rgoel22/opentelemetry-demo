@@ -41,78 +41,92 @@ jobs:
             tag_suffix: accountingservice
             context: ./
             setup-qemu: true
+            paths: ['./src/accountingservice/**/*']
           - file: ./src/adservice/Dockerfile
             tag_suffix: adservice
             context: ./
             setup-qemu: true
+            paths: ['./src/adservice/**/*']
           - file: ./src/cartservice/src/Dockerfile
             tag_suffix: cartservice
             context: ./
             setup-qemu: false
+            paths: ['./src/cartservice/**/*']
           - file: ./src/checkoutservice/Dockerfile
             tag_suffix: checkoutservice
             context: ./
             setup-qemu: true
+            paths: ['./src/checkoutservice/**/*']
           - file: ./src/currencyservice/Dockerfile
             tag_suffix: currencyservice
             context: ./
             setup-qemu: true
+            paths: ['./src/currencyservice/**/*']
           - file: ./src/emailservice/Dockerfile
             tag_suffix: emailservice
             context: ./
             setup-qemu: true
+            paths: ['./src/emailservice/**/*']
           - file: ./src/frauddetectionservice/Dockerfile
             tag_suffix: frauddetectionservice
             context: ./
             setup-qemu: true
+            paths: ['./src/frauddetectionservice/**/*']
           - file: ./src/frontend/Dockerfile
             tag_suffix: frontend
             context: ./
             setup-qemu: true
+            paths: ['./src/frontend/**/*']
           - file: ./src/frontendproxy/Dockerfile
             tag_suffix: frontendproxy
             context: ./
             setup-qemu: true
-          - file: ./src/frontend/Dockerfile.cypress
-            tag_suffix: frontend-tests
-            context: ./
-            setup-qemu: true
+            paths: ['./src/frontendproxy/**/*']
           - file: ./src/imageprovider/Dockerfile
             tag_suffix: imageprovider
             context: ./
             setup-qemu: true
+            paths: ['./src/imageprovider/**/*']
           - file: ./src/kafka/Dockerfile
             tag_suffix: kafka
             context: ./
             setup-qemu: true
+            paths: ['./src/kafka/**/*']
           - file: ./src/loadgenerator/Dockerfile
             tag_suffix: loadgenerator
             context: ./
             setup-qemu: true
+            paths: ['./src/loadgenerator/**/*']
           - file: ./src/paymentservice/Dockerfile
             tag_suffix: paymentservice
             context: ./
             setup-qemu: true
+            paths: ['./src/paymentservice/**/*']
           - file: ./src/productcatalogservice/Dockerfile
             tag_suffix: productcatalogservice
             context: ./
             setup-qemu: true
+            paths: ['./src/productcatalogservice/**/*']
           - file: ./src/quoteservice/Dockerfile
             tag_suffix: quoteservice
             context: ./
             setup-qemu: true
+            paths: ['./src/quoteservice/**/*']
           - file: ./src/recommendationservice/Dockerfile
             tag_suffix: recommendationservice
             context: ./
             setup-qemu: true
+            paths: ['./src/recommendationservice/**/*']
           - file: ./src/shippingservice/Dockerfile
             tag_suffix: shippingservice
             context: ./
             setup-qemu: true
+            paths: ['./src/shippingservice/**/*']
           - file: ./src/flagd-ui/Dockerfile
             tag_suffix: flagdui
             context: ./
             setup-qemu: true
+            paths: ['./src/flagd-ui/**/*']
           - file: ./test/tracetesting/Dockerfile
             tag_suffix: traceBasedTests
             context: ./
@@ -121,6 +135,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Detect changes
+        id: detect-changes
+        run: |
+          echo "CHANGED=false" >> $GITHUB_ENV
+          for path in ${{ toJson(matrix.services.paths) }}; do
+            if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q "$path"; then
+              echo "CHANGED=true" >> $GITHUB_ENV
+              break
+            fi
+          done
 
       - name: Load environment variables from .env file
         run: |
@@ -138,14 +163,11 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
-
       - name: Set up QEMU
         if: ${{ matrix.services.setup-qemu }}
         uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -154,6 +176,7 @@ jobs:
             max-parallelism = 4
 
       - name: Build and push Docker images
+        if: env.CHANGED == 'true'
         uses: docker/build-push-action@v6.10.0
         with:
           context: ${{ matrix.services.context }}

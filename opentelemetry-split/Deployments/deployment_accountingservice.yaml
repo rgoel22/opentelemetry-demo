@@ -22,7 +22,7 @@ metadata:
     opentelemetry.io/name: opentelemetry-demo-accountingservice
   name: opentelemetry-demo-accountingservice
 spec:
-  replicas: -1
+  replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
