@@ -37,7 +37,7 @@ jobs:
 
       - name: Build Tracetest Docker Image
         run: |
-          docker build -t tracetest ./test/tracetest
+          docker build -t tracetest ./test/tracetesting
 
       - name: Run Tracetest Container
         run: |
