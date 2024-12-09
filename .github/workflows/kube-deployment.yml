@@ -6,32 +6,6 @@ on:
 jobs:
   kubernetes-deployment-apply:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        step:
-          - accountingservice
-          - adservice
-          - cartservice
-          - checkoutservice
-          - currencyservice
-          - emailservice
-          - flagd
-          - frauddetectionservice
-          - frontend
-          - frontendproxy
-          - grafana
-          - imageprovider
-          - jaeger
-          - kafka
-          - loadgenerator
-          - open
-          - paymentservice
-          - productcatalogservice
-          - prometheus
-          - quoteservice
-          - recommendationservice
-          - shippingservice
-          - valkey
 
     steps:
       - name: Checkout repository
@@ -49,39 +23,18 @@ jobs:
 
       - name: Deploy Application
         run: |
-          kubectl apply -R -f ./opentelemetry-split/Deployments/deployment_${{ matrix.step }}.yaml
+          kubectl apply -f ./kubernetes/opentelemetry-demo.yaml
 
+      - name: Verify Pods
+        run: |
+          echo "Waiting for all pods to be ready in the otel-demo namespace..."
+          kubectl wait --for=condition=Ready pods --all --namespace otel-demo --timeout=300s
+          echo "All pods are ready."
 
   kubernetes-failure-rollout:
     needs: kubernetes-deployment-apply
     runs-on: ubuntu-latest
     if: failure()
-    strategy:
-      matrix:
-        step:
-          - accountingservice
-          - adservice
-          - cartservice
-          - checkoutservice
-          - currencyservice
-          - emailservice
-          - flagd
-          - frauddetectionservice
-          - frontend
-          - frontendproxy
-          - grafana
-          - imageprovider
-          - jaeger
-          - kafka
-          - loadgenerator
-          - open
-          - paymentservice
-          - productcatalogservice
-          - prometheus
-          - quoteservice
-          - recommendationservice
-          - shippingservice
-          - valkey
 
     steps:
       - name: Checkout repository
@@ -97,15 +50,11 @@ jobs:
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
 
-      - name: Rollback deployment ${{ matrix.step }}
+      - name: Rollback deployment
         run: |
-          if kubectl rollout history deployment/opentelemetry-demo-${{ matrix.step }} > /dev/null 2>&1; then
-            echo "Rolling back ${{ matrix.step }}..."
-            kubectl rollout undo deployment/opentelemetry-demo-${{ matrix.step }}
-            kubectl rollout status deployment/opentelemetry-demo-${{ matrix.step }} --timeout=60s
-          else
-            echo "No previous deployment to rollback to for ${{ matrix.step }}."
-          fi
+          echo "Rolling back deployments from combined file..."
+          kubectl rollout undo -f ./kubernetes/opentelemetry-demo.yaml
+          kubectl rollout status -f ./kubernetes/opentelemetry-demo.yaml --timeout=60s
 
       - name: Log rollback success
-        run: echo "Rollback completed for ${{ matrix.step }}."
+        run: echo "Rollback completed for all deployments in the combined file."
