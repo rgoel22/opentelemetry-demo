@@ -4,7 +4,37 @@ on:
   workflow_call:
 
 jobs:
+  kubernetes-test-run:
+    needs: update-kubeconfig-and-namespace
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Build Tracetest Docker Image
+        run: |
+          docker build -t tracetest ./test/tracetest
+
+      - name: Run Tracetest Container
+        run: |
+          docker run --name tracetest -v $PWD/tracetest:/app tracetest /bin/bash /app/run.bash
+
+      - name: Capture Tracetest Logs
+        run: |
+          docker logs tracetest > tracetest-output.log || true
+
+      - name: Cleanup Tracetest Container
+        run: |
+          docker rm tracetest
+
+      - name: Upload Test Logs
+        uses: actions/upload-artifact@v3
+        with:
+          name: tracetest-output
+          path: tracetest-output.log
+
   kubernetes-deployment-apply:
+    needs: kubernetes-test-run
     runs-on: ubuntu-latest
     strategy:
       matrix:
