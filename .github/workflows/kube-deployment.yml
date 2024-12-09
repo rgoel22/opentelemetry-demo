@@ -59,5 +59,11 @@ jobs:
             kubectl rollout status deployment/$deployment -n otel-demo --timeout=60s
           done
 
+      - name: Verify Pods
+        run: |
+          echo "Verifying all pods in namespace otel-demo are ready..."
+          kubectl wait --for=condition=Ready pods --all --namespace otel-demo --timeout=300s
+          echo "All pods are ready after rollback."
+
       - name: Log rollback success
-        run: echo "Rollback completed for all deployments in the namespace."
+        run: echo "Rollback completed and verified for all deployments in the namespace."
