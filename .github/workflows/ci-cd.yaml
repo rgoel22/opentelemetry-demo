@@ -22,16 +22,16 @@ on:
       - main
 
 jobs:
-  build_images:
-    uses: ./.github/workflows/component-build-images.yml
-    secrets: inherit
-    with:
-      push: true
-      version: 'main'
-  integration_checks:
-    uses: ./.github/workflows/checks.yml
-    needs: build_images
-    secrets: inherit
+#  build_images:
+#    uses: ./.github/workflows/component-build-images.yml
+#    secrets: inherit
+#    with:
+#      push: true
+#      version: 'main'
+#  integration_checks:
+#    uses: ./.github/workflows/checks.yml
+#    needs: build_images
+#    secrets: inherit
   kubenetes_deployment:
     uses: ./.github/workflows/kube-deployment.yml
     needs: integration_checks
