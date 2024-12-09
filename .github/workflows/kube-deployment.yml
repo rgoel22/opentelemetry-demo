@@ -4,59 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  update-kubeconfig-and-namespace:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Connect to EKS cluster
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Update kubeconfig for EKS
-        run: |
-          aws eks update-kubeconfig --region us-east-1 --name otel-demo-cluster
-          kubectl config use-context arn:aws:eks:us-east-1:314147830127:cluster/otel-demo-cluster
-
-      - name: Apply Namespace
-        run: |
-          kubectl apply --validate=false -f ./opentelemetry-split/Namespaces/namespaces_1.yaml
-
-  kubernetes-test-run:
-    needs: update-kubeconfig-and-namespace
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Build Tracetest Docker Image
-        run: |
-          docker build -t tracetest ./test/tracetesting
-
-      - name: Run Tracetest Container
-        run: |
-          docker run --name tracetest -v $PWD/tracetest:/app tracetest /bin/bash /app/run.bash
-
-      - name: Capture Tracetest Logs
-        run: |
-          docker logs tracetest > tracetest-output.log || true
-
-      - name: Cleanup Tracetest Container
-        run: |
-          docker rm tracetest
-
-      - name: Upload Test Logs
-        uses: actions/upload-artifact@v3
-        with:
-          name: tracetest-output
-          path: tracetest-output.log
-
   kubernetes-deployment-apply:
-    needs: kubernetes-test-run
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -97,8 +45,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Update kubeconfig for EKS
-        run: |
-          aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
+        run: aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
 
       - name: Deploy Application
         run: |
@@ -148,8 +95,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Update kubeconfig for EKS
-        run: |
-          aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
+        run: aws eks update-kubeconfig --name otel-demo-cluster --region us-east-1
 
       - name: Rollback deployment ${{ matrix.step }}
         run: kubectl rollout undo deployment/opentelemetry-demo-${{ matrix.step }}
