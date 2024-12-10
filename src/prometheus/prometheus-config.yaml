@@ -4,6 +4,7 @@
 global:
   evaluation_interval: 30s
   scrape_interval: 5s
+  external_url: http://a32e970432c0a46cd9020876403044fa-824213673.us-east-1.elb.amazonaws.com/
 storage:
   tsdb:
     out_of_order_time_window: 30m
