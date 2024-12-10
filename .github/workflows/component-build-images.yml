@@ -176,7 +176,7 @@ jobs:
             max-parallelism = 4
 
       - name: Build and push Docker images
-        if: env.CHANGED == 'true'
+        #if: env.CHANGED == 'true'
         uses: docker/build-push-action@v6.10.0
         with:
           context: ${{ matrix.services.context }}

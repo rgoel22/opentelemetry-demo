@@ -32,11 +32,11 @@ jobs:
     uses: ./.github/workflows/checks.yml
     needs: build_images
     secrets: inherit
+  test_automation:
+      uses: ./.github/workflows/run-integration-tests.yml
+      needs: integration_checks
+      secrets: inherit
   kubenetes_deployment:
     uses: ./.github/workflows/kube-deployment.yml
-    needs: integration_checks
-    secrets: inherit
-  tracetesting:
-    uses: ./.github/workflows/run-integration-tests.yml
-    needs: kubenetes_deployment
+    needs: test_automation
     secrets: inherit
