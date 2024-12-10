@@ -36,3 +36,7 @@ jobs:
     uses: ./.github/workflows/kube-deployment.yml
     needs: integration_checks
     secrets: inherit
+  tracetesting:
+    uses: ./.github/workflows/run-integration-tests.yml
+    needs: kubenetes_deployment
+    secrets: inherit

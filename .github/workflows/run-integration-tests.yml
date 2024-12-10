@@ -3,15 +3,13 @@
 name: Integration Tests
 
 on:
-  pull_request_review:
-    types:
-      - submitted
+  workflow_call:
+
 
 jobs:
   run_tests:
     runs-on: ubuntu-latest
     name: "Run CI"
-    if: github.event.review.state == 'APPROVED'
     steps:
       - name: check out code
         uses: actions/checkout@v4
