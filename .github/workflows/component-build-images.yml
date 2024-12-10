@@ -136,16 +136,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Detect changes for current service
-        id: detect-changes
-        run: |
-          echo "CHANGED=false" >> $GITHUB_ENV
-          for path in ${{ matrix.services.paths }}; do
-            if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q "$path"; then
-              echo "CHANGED=true" >> $GITHUB_ENV
-              break
-            fi
-          done
+#      - name: Detect changes for current service
+#        id: detect-changes
+#        run: |
+#          echo "CHANGED=false" >> $GITHUB_ENV
+#          for path in ${{ matrix.services.paths }}; do
+#            if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q "$path"; then
+#              echo "CHANGED=true" >> $GITHUB_ENV
+#              break
+#            fi
+#          done
 
       - name: Load environment variables from .env file
         run: |
