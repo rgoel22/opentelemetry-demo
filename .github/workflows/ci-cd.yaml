@@ -33,9 +33,9 @@ jobs:
     needs: build_images
     secrets: inherit
   test_automation:
-      uses: ./.github/workflows/run-integration-tests.yml
-      needs: integration_checks
-      secrets: inherit
+    uses: ./.github/workflows/run-integration-tests.yml
+    needs: integration_checks
+    secrets: inherit
   kubenetes_deployment:
     uses: ./.github/workflows/kube-deployment.yml
     needs: test_automation
