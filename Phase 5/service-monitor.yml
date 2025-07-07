@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: otel-demo-servicemonitor
+  labels:
+    release: prometheus
+  namespace: monitoring
+spec:
+  jobLabel: app.kubernetes.io/name
+  namespaceSelector:
+    matchNames:
+      - otel-demo
+  selector:
+    matchExpressions:
+      - {key: app.kubernetes.io/instance, operator: In, values: [opentelemetry-demo]}
+  endpoints:
+  - port: http
+    interval: 15s
+    path: /metrics

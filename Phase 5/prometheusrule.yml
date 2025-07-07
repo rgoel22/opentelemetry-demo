@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: otel-demo-alerts
+  labels:
+    release: prometheus
+  namespace: monitoring
+spec:
+  groups:
+  - name: otel-demo.rules
+    rules:
+    - alert: OtelDemoPodFrequentRestarts
+      expr: increase(kube_pod_container_status_restarts_total{namespace="otel-demo"}[5m]) > 3
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Pod {{ $labels.pod }} in otel-demo namespace has restarted frequently"
+        description: "The pod {{ $labels.pod }} in the otel-demo namespace has restarted more than 3 times in the last 5 minutes."

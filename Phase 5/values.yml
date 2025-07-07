@@ -1,0 +1,40 @@
+# values.yaml for Prometheus (kube-prometheus-stack)
+prometheus:
+  enabled: true  # Ensure Prometheus is enabled
+  namespace: monitoring  # Prometheus will be installed in this namespace
+  prometheusSpec:
+    serviceMonitorSelector:
+      matchLabels:
+        release: prometheus  # Match the label in the ServiceMonitor metadata
+    serviceMonitorSelectorNilUsesHelmValues: false
+    # Scrape interval and scrape timeout settings 
+    scrapeInterval: 15s  # Set the scrape interval to match your ServiceMonitor config
+    scrapeTimeout: 10s  # Set scrape timeout 
+    ruleSelector:
+      matchLabels:
+        release: prometheus  # Match the label in the PrometheusRule metadata
+alertmanager:
+  enabled: true
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ['alertname']
+      group_wait: 10s
+      group_interval: 5m
+      repeat_interval: 3h
+      receiver: sns-notifications
+      routes:
+        - match:
+           alertname: Watchdog
+           receiver: 'null'     
+    receivers:
+    - name: sns-notifications
+      sns_configs:
+      - send_resolved: true
+        topic_arn: arn:aws:sns:us-east-1:296062549462:alertmanager-notifications
+        message: 'Alert: {{ .CommonLabels.alertname }} is firing!'
+        subject: 'Alert: {{ .CommonLabels.alertname }}'
+        sigv4:
+          region: us-east-1  # Specify your AWS region here
+
